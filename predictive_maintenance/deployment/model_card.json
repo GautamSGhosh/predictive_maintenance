@@ -1,0 +1,42 @@
+{
+  "model_name": "Gradient Boosting",
+  "task": "Binary classification - predictive maintenance",
+  "target": "engine_condition (0 = Normal, 1 = Faulty)",
+  "decision_threshold": 0.63,
+  "threshold_rule": "maximise out-of-fold balanced accuracy on the training set",
+  "feature_columns": [
+    "engine_rpm",
+    "lub_oil_pressure",
+    "fuel_pressure",
+    "coolant_pressure",
+    "lub_oil_temp",
+    "coolant_temp"
+  ],
+  "cv_roc_auc": 0.7019026753083424,
+  "best_parameters": {
+    "learning_rate": 0.1,
+    "max_depth": 1,
+    "n_estimators": 200
+  },
+  "high_recall_threshold": 0.46,
+  "test_metrics": {
+    "Accuracy": 0.6398771435884311,
+    "Precision": 0.7672064777327935,
+    "Recall (Faulty)": 0.6155095412099066,
+    "Specificity (Normal)": 0.6814404432132964,
+    "F1 (Faulty)": 0.6830367199819779,
+    "Macro F1": 0.6330739155465446,
+    "Balanced Acc": 0.6484749922116015,
+    "MCC": 0.28669129234654334,
+    "ROC-AUC": 0.703497497028037,
+    "PR-AUC": 0.8032413988245086
+  },
+  "train_rows": 15628,
+  "test_rows": 3907,
+  "limitations": [
+    "Decision-support tool, not for autonomous safety-critical decisions",
+    "Moderate discrimination (see test_metrics); use for ranking and triage",
+    "Trained on historical snapshots without time, engine age or maintenance history",
+    "Retrain when sensor distributions drift"
+  ]
+}

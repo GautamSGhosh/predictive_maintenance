@@ -1,0 +1,19 @@
+{
+  "source_file": "data/engine_data.csv",
+  "total_rows": 19535,
+  "train_rows": 15628,
+  "test_rows": 3907,
+  "test_size": 0.2,
+  "random_state": 42,
+  "target_column": "engine_condition",
+  "feature_columns": [
+    "engine_rpm",
+    "lub_oil_pressure",
+    "fuel_pressure",
+    "coolant_pressure",
+    "lub_oil_temp",
+    "coolant_temp"
+  ],
+  "train_faulty_share": 0.6305,
+  "test_faulty_share": 0.6304
+}

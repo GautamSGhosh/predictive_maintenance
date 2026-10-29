@@ -1,0 +1,115 @@
+name: predictive-maintenance-pipeline
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write            # lets the train-model job commit the refreshed model to main
+
+env:
+  PYTHON_VERSION: "3.13"
+
+jobs:
+  register-data:
+    name: 1. Register and validate dataset
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: predictive_maintenance/model_building/requirements.txt
+      - name: Install dependencies
+        run: pip install -r predictive_maintenance/model_building/requirements.txt
+      - name: Validate and register the dataset
+        run: python predictive_maintenance/model_building/data_register.py
+
+  prepare-data:
+    name: 2. Clean data and create train/test split
+    needs: register-data
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: predictive_maintenance/model_building/requirements.txt
+      - name: Install dependencies
+        run: pip install -r predictive_maintenance/model_building/requirements.txt
+      - name: Clean data and create the stratified split
+        run: python predictive_maintenance/model_building/prep.py
+      - name: Publish train/test splits as a workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: data-splits
+          path: predictive_maintenance/artifacts/
+          if-no-files-found: error
+          retention-days: 7
+
+  train-model:
+    name: 3. Tune, track (MLflow) and commit the best model
+    needs: prepare-data
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: predictive_maintenance/model_building/requirements.txt
+      - name: Install dependencies
+        run: pip install -r predictive_maintenance/model_building/requirements.txt
+      - name: Download train/test splits from the previous job
+        uses: actions/download-artifact@v4
+        with:
+          name: data-splits
+          path: predictive_maintenance/artifacts/
+      - name: Tune, track with MLflow and save the best model
+        run: python predictive_maintenance/model_building/train.py
+      - name: Verify that the saved model reproduces its model card
+        run: python predictive_maintenance/model_building/train.py --check
+      - name: Upload the MLflow tracking database
+        uses: actions/upload-artifact@v4
+        with:
+          name: mlflow-tracking
+          path: predictive_maintenance/mlflow.db
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Commit the refreshed model to the main branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add predictive_maintenance/deployment/best_model.joblib predictive_maintenance/deployment/model_card.json
+          git diff --cached --quiet || git commit -m "chore: update best model [skip ci]"
+          git pull --rebase --autostash origin main
+          git push origin HEAD:main
+
+  verify-deployment:
+    name: 4. Verify the committed model and the Streamlit app
+    needs: train-model
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the refreshed main branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: predictive_maintenance/deployment/requirements.txt
+      - name: Install deployment dependencies
+        run: pip install -r predictive_maintenance/deployment/requirements.txt
+      - name: Smoke-test the committed model and the app
+        run: python predictive_maintenance/model_building/smoke_test.py

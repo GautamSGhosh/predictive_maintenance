@@ -1,0 +1,23 @@
+{
+  "rows_loaded": 19535,
+  "rows_removed_duplicates_or_missing_target": 0,
+  "negative_sensor_cells": 0,
+  "renamed_columns": {
+    "Engine rpm": "engine_rpm",
+    "Lub oil pressure": "lub_oil_pressure",
+    "Fuel pressure": "fuel_pressure",
+    "Coolant pressure": "coolant_pressure",
+    "lub oil temp": "lub_oil_temp",
+    "Coolant temp": "coolant_temp",
+    "Engine Condition": "engine_condition"
+  },
+  "dropped_columns": {},
+  "feature_columns": [
+    "engine_rpm",
+    "lub_oil_pressure",
+    "fuel_pressure",
+    "coolant_pressure",
+    "lub_oil_temp",
+    "coolant_temp"
+  ]
+}
