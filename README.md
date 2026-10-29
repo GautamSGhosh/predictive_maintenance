@@ -3,7 +3,7 @@
 End-to-end MLOps project: data validation, preparation, tuned models with MLflow tracking, a Streamlit app and a
 GitHub Actions pipeline that retrains the model and commits it to `main`.
 
-* Live app: https://predictivemaintenance-gautamsghosh-capstone.streamlit.app
+* Live app: https://predictive-maintenance-gautamsghosh-capstone.streamlit.app
 * Pipeline: `.github/workflows/pipeline.yml` (register-data -> prepare-data -> train-model -> verify-deployment)
 
 | Folder | Content |
