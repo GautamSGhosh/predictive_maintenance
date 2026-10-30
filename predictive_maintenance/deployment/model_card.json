@@ -3,8 +3,8 @@
   "task": "Binary classification - predictive maintenance",
   "target": "engine_condition (0 = Normal, 1 = Faulty)",
   "decision_threshold": 0.64,
-  "trained_at_utc": "2026-10-30T09:12:42+00:00",
-  "workflow_run": "41029797547",
+  "trained_at_utc": "2026-10-30T19:31:37+00:00",
+  "workflow_run": "41112872572",
   "threshold_rule": "maximise out-of-fold balanced accuracy on the training set",
   "feature_columns": [
     "engine_rpm",
