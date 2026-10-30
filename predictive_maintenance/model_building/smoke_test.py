@@ -12,6 +12,7 @@ DEPLOY = BASE / "deployment"
 
 
 def main():
+    """Score two sample engines with the committed model and run the Streamlit app headlessly."""
     bundle = joblib.load(DEPLOY / "best_model.joblib")
     card = json.loads((DEPLOY / "model_card.json").read_text())
     stats = json.loads((DEPLOY / "feature_stats.json").read_text())

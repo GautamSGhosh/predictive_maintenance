@@ -22,6 +22,7 @@ CORR_LIMIT = 0.95
 
 
 def snake_case(name):
+    """Standardise a column header, e.g. 'lub oil temp' -> 'lub_oil_temp'."""
     return re.sub(r"\W+", "_", name.strip().lower()).strip("_")
 
 
@@ -42,6 +43,7 @@ def find_unnecessary_columns(df, features):
 
 
 def main():
+    """Load, clean, split and save the artifacts; return the process exit code."""
     ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
     raw = pd.read_csv(DATA_PATH)
     print(f"Loaded {raw.shape[0]:,} rows x {raw.shape[1]} columns from {DATA_PATH}")

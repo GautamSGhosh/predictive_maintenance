@@ -4,6 +4,7 @@ import logging
 import os
 import shutil
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 import joblib
@@ -45,6 +46,7 @@ def load_splits(artifact_dir):
 
 
 def make_cv():
+    """The stratified 5-fold splitter used for every cross-validation in the project."""
     return StratifiedKFold(n_splits=CV_FOLDS, shuffle=True, random_state=SEED)
 
 
@@ -61,21 +63,21 @@ def get_model_configs():
     return [
         (BASELINE, DummyClassifier(strategy="prior"), {}),
         ("Decision Tree", tree(),
-         {"classifier__max_depth": [3, 5, 8, 12], "classifier__min_samples_leaf": [10, 30, 60]}),
+         {"classifier__max_depth": [3, 5, 8, 12], "classifier__min_samples_leaf": [30, 60, 100, 200]}),
         ("Bagging", BaggingClassifier(estimator=tree(min_samples_leaf=10), random_state=SEED),
-         {"classifier__n_estimators": [100, 200], "classifier__max_samples": [0.3, 0.5, 0.8]}),
+         {"classifier__n_estimators": [100, 200, 300], "classifier__max_samples": [0.1, 0.2, 0.3, 0.5]}),
         ("Random Forest", RandomForestClassifier(random_state=SEED),
-         {"classifier__n_estimators": [200], "classifier__max_depth": [4, 6, 10],
-          "classifier__min_samples_leaf": [30, 60, 100]}),
+         {"classifier__n_estimators": [200], "classifier__max_depth": [6, 10, 14],
+          "classifier__min_samples_leaf": [60, 100, 200]}),
         ("AdaBoost", AdaBoostClassifier(estimator=tree(max_depth=1), random_state=SEED),
-         {"classifier__estimator__max_depth": [1, 2, 3], "classifier__n_estimators": [100, 200],
-          "classifier__learning_rate": [0.1, 0.3]}),
+         {"classifier__estimator__max_depth": [2, 3, 4], "classifier__n_estimators": [100, 200, 400],
+          "classifier__learning_rate": [0.05, 0.1, 0.3]}),
         ("Gradient Boosting", GradientBoostingClassifier(random_state=SEED),
-         {"classifier__n_estimators": [100, 200], "classifier__learning_rate": [0.05, 0.1],
+         {"classifier__n_estimators": [100, 200, 400], "classifier__learning_rate": [0.05, 0.1, 0.2],
           "classifier__max_depth": [1, 2, 3]}),
         ("XGBoost", XGBClassifier(eval_metric="logloss", random_state=SEED, n_jobs=1),
-         {"classifier__n_estimators": [100, 300, 500], "classifier__max_depth": [1, 2, 3, 4],
-          "classifier__learning_rate": [0.01, 0.03, 0.1]}),
+         {"classifier__n_estimators": [300, 500, 800], "classifier__max_depth": [1, 2, 3, 4],
+          "classifier__learning_rate": [0.03, 0.1, 0.2]}),
     ]
 
 
@@ -207,6 +209,8 @@ def edge_parameters(configs, results):
             numeric = [v for v in values if isinstance(v, (int, float))]
             if len(values) > 1 and len(numeric) == len(values) and param in best.get(name, {}):
                 value = best[name][param]
+                if param.endswith("max_depth") and value == 1:      # 1 is the smallest possible depth, not a grid limit
+                    continue
                 if value == min(numeric):
                     flags.append(f"{param}={value} (lowest in grid)")
                 elif value == max(numeric):
@@ -237,6 +241,7 @@ def oof_probabilities(pipe, X, y, cv=None):
 
 
 def threshold_sweep(y, proba):
+    """Precision, recall, specificity, F1 and balanced accuracy for every threshold in THRESHOLDS."""
     rows = []
     for t in THRESHOLDS:
         pred = (proba >= t).astype(int)
@@ -249,6 +254,7 @@ def threshold_sweep(y, proba):
 
 
 def best_threshold(sweep, criterion="balanced_accuracy"):
+    """Threshold that maximises the chosen column of the sweep table."""
     return float(sweep.loc[sweep[criterion].idxmax(), "threshold"])
 
 
@@ -273,6 +279,7 @@ def cost_per_1000(y_true, pred, fn_cost, fp_cost=1.0):
 
 
 def cost_optimal_threshold(y, proba, fn_cost):
+    """Threshold with the lowest expected cost per 1,000 engines for the given missed-fault cost."""
     costs = [cost_per_1000(y, (proba >= t).astype(int), fn_cost) for t in THRESHOLDS]
     return float(THRESHOLDS[int(np.argmin(costs))])
 
@@ -320,6 +327,8 @@ def save_bundle(deploy_dir, pipe, threshold, features, name, extra):
                  "model_type": name}, deploy_dir / "best_model.joblib")
     card = {"model_name": name, "task": "Binary classification - predictive maintenance",
             "target": "engine_condition (0 = Normal, 1 = Faulty)", "decision_threshold": threshold,
+            "trained_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "workflow_run": os.getenv("GITHUB_RUN_ID", "local"),     # makes every CI run produce a committable change
             "threshold_rule": "maximise out-of-fold balanced accuracy on the training set",
             "feature_columns": list(features), **extra,
             "limitations": ["Decision-support tool, not for autonomous safety-critical decisions",

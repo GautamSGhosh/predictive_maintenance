@@ -20,11 +20,13 @@ results = []
 
 
 def check(name, passed, detail=""):
+    """Record one validation result and print it as PASS or FAIL."""
     results.append(passed)
     print(f"[{'PASS' if passed else 'FAIL'}] {name} {detail}".rstrip())
 
 
 def main():
+    """Run all checks, print the dataset summary and return the process exit code."""
     print("=" * 70, "\nDATA REGISTRATION & SCHEMA VALIDATION\n" + "=" * 70, sep="")
     check("File exists", DATA_PATH.exists(), f"({DATA_PATH})")
     if not DATA_PATH.exists():

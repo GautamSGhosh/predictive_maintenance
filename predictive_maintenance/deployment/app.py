@@ -22,6 +22,7 @@ def snake_case(name):
 
 @st.cache_resource
 def load_assets():
+    """Load the committed model bundle, its model card and the training-range statistics (cached per session)."""
     bundle = joblib.load(MODEL_PATH)
     card = json.loads(CARD_PATH.read_text(encoding="utf-8"))
     stats = json.loads(STATS_PATH.read_text(encoding="utf-8")) if STATS_PATH.exists() else {}
@@ -77,7 +78,7 @@ with single_tab:
             step = max(round(span / 200, 2), 0.01)
             with columns[i % 3]:
                 inputs[feature] = st.number_input(feature.replace("_", " ").capitalize(), min_value=0.0, value=default,
-                                                  step=step, format="%.2f", key=feature)
+                                                  step=step, format="%.4f" if "pressure" in feature else "%.2f", key=feature)
         submitted = st.form_submit_button("Assess maintenance risk", type="primary")
 
     if submitted:
