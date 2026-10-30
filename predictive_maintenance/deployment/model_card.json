@@ -1,8 +1,10 @@
 {
-  "model_name": "Gradient Boosting",
+  "model_name": "XGBoost",
   "task": "Binary classification - predictive maintenance",
   "target": "engine_condition (0 = Normal, 1 = Faulty)",
-  "decision_threshold": 0.63,
+  "decision_threshold": 0.64,
+  "trained_at_utc": "2026-10-30T09:12:42+00:00",
+  "workflow_run": "41029797547",
   "threshold_rule": "maximise out-of-fold balanced accuracy on the training set",
   "feature_columns": [
     "engine_rpm",
@@ -12,24 +14,24 @@
     "lub_oil_temp",
     "coolant_temp"
   ],
-  "cv_roc_auc": 0.7019026753083424,
+  "cv_roc_auc": 0.7021002947284505,
   "best_parameters": {
     "learning_rate": 0.1,
     "max_depth": 1,
-    "n_estimators": 200
+    "n_estimators": 500
   },
-  "high_recall_threshold": 0.46,
+  "high_recall_threshold": 0.45,
   "test_metrics": {
-    "Accuracy": 0.6398771435884311,
-    "Precision": 0.7672064777327935,
-    "Recall (Faulty)": 0.6155095412099066,
-    "Specificity (Normal)": 0.6814404432132964,
-    "F1 (Faulty)": 0.6830367199819779,
-    "Macro F1": 0.6330739155465446,
-    "Balanced Acc": 0.6484749922116015,
-    "MCC": 0.28669129234654334,
-    "ROC-AUC": 0.703497497028037,
-    "PR-AUC": 0.8032413988245086
+    "Accuracy": 0.6368057332992065,
+    "Precision": 0.770746887966805,
+    "Recall (Faulty)": 0.6033292732440114,
+    "Specificity (Normal)": 0.6939058171745153,
+    "F1 (Faulty)": 0.6768389888408107,
+    "Macro F1": 0.631145173649152,
+    "Balanced Acc": 0.6486175452092633,
+    "MCC": 0.2869719639271223,
+    "ROC-AUC": 0.7048496417336693,
+    "PR-AUC": 0.8049338208118875
   },
   "train_rows": 15628,
   "test_rows": 3907,
